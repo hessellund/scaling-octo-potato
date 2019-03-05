@@ -1,0 +1,30 @@
+Guide:
+------
+
+Size screenshots such that the width is 1024. This can for instance be accomplished with the "Resize canvas" feature in GIMP. This will make screenshots appear nice, uniform, and centered in both pdf and html output.
+
+
+---------------------------------------------- Deprecated
+SIZES
+-----
+in 72 DPI, an A4 page has a width of approx. 595 pixels
+(see also http://superuser.com/questions/480194/what-is-standard-a4-paper-size-in-pixels-for-a-given-resolution)
+
+
+COMPUTE BOUNDING BOX:
+---------------------
+
+>ebb -v std-weeklytimesheets.png
+Writing to std-weeklytimesheets.bb: Bounding box: 0 0 737 553
+
+HANDLE SMALLER PICTURE IN PDF AND HTML
+--------------------------------------
+
+First line goes into HTML but is filtered out from latex. The remaining lines are ignored by all writers except latex.
+
+![2 formats](images/sidebar.png "Alt text") {skip-latex}
+\begin{figure}[htbp]
+\centering
+\includegraphics[bb=0 0 55 237]{images/sidebar.png}
+\caption{2 formats}
+\end{figure}
