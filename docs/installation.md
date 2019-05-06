@@ -150,7 +150,7 @@ After iAccess has been installed on your IIS web server, you can configure it us
 4. Check *Enable proxy* as shown in Figure @iis2.
 5. Open *URL Rewrite* to add proxy rules for the container, configurations and filedrop APIs. Note: This must be done on the local site, not globally as shown in Figure @iis3.
 
-![Figure @iis3: Add Proxy Rules](images/iis3-1024x318.png "Add Proxy Rules")
+![Figure @iis3: Add Proxy Rules](images/rewrite-rules.png "Add Proxy Rules")
 
 In IIS 8.0 and up, you will need to install the [Web Platform Installer](https://www.microsoft.com/web/downloads/platform.aspx) in order to install the ARR plugin.
 
@@ -163,11 +163,7 @@ To ensure that login pages (and other non-root URLs) load properly, open the IIS
         <conditions logicalGrouping="MatchAll" trackAllCaptures="false">
           <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
           <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          <add input="{REQUEST_FILENAME}" pattern="containers*" negate="true" />
-          <add input="{REQUEST_FILENAME}" pattern="filedrop*" negate="true" />
-          <add input="{REQUEST_FILENAME}" pattern="configurations*" negate="true" />
-          <add input="{REQUEST_FILENAME}" pattern="auth*" negate="true" />
-          <add input="{REQUEST_FILENAME}" pattern="environment*" negate="true" />
+          <add input="{REQUEST_FILENAME}" pattern="maconomy-api*" negate="true" /> 
         </conditions>
       <action type="Rewrite" url="/" />
     </rule>
@@ -178,106 +174,40 @@ For example, if the *IIS Application folder* is called **iAccess", then the rewr
 
     <action type="Rewrite" url="/iAccess/" />
 
-##### Set up proxy for Container API
+##### Add the server variable for Maconomy API
+
+1. Click View Server Variables
+2. Click Add...
+3. Set the name: HTTP_Maconomy-Forwarded-Base-Path
+
+![Figure @iis4: Maconomy API Server variable](images/maconomy-api-server-variable.png "Maconomy API Server variable")
+
+##### Set up proxy for Maconomy API
 
 1. Click Add Rule...
 2. Select Blank rule.
-3. Fill out the rule as shown in Figure @iis4.
-
-Make sure to choose the Coupling Service webport when setting this up, for example, 4111 in Figure @iis4. The host should be the ip or hostname of the coupling service, not necessarily 127.0.0.1. Here is an overview of the required parameters for the rule.
-
-The rewrite URL *MUST* be HTTP rather than HTTPS. Otherwise the rewriting of response URLs will not work, and iAccess will not be able to make it past the login screen.
+3. Fill out the rule as shown in the section on setting up proxy for Maconomy API, specifically with the following parameters:
 
 Match URL
 
     Requested URL: Matches the Pattern
-    Using: Wilcards
-    Pattern: containers/*
+    Using: Wildcards
+    Pattern: maconomy-api*
     Ignore case: checked
+
+Server Variables
+
+	Click Add...
+	Server variable name: HTTP_Maconomy-Forwarded-Base-Path
+	Value: maconomy-api
 
 Action
 
     Action type: Rewrite
-    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>/containers/{R:1}
+    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>{R:1}
     Append query string: checked
 
-![Figure @iis4: Container API](images/iis4-1024x671.png "Container API")
-
-##### Set up proxy for Configurations API
-
-1. Click Add Rule...
-2. Select Blank rule.
-3. Fill out the rule as shown in the section on setting up proxy for Containers, specifically with the following parameters:
-
-Match URL
-
-    Requested URL: Matches the Pattern
-    Using: Wilcards
-    Pattern: configurations/*
-    Ignore case: checked
-
-Action
-
-    Action type: Rewrite
-    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>/configurations/{R:1}
-    Append query string: checked
-
-##### Set up proxy for Filedrop API
-
-1. Click Add Rule...
-2. Select Blank rule.
-3. Fill out the rule as shown in the section on setting up proxy for Containers, specifically with the following parameters:
-
-Match URL
-
-    Requested URL: Matches the Pattern
-    Using: Wilcards
-    Pattern: filedrop/*
-    Ignore case: checked
-
-Action
-
-    Action type: Rewrite
-    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>/filedrop/{R:1}
-    Append query string: checked
-
-##### Set up proxy for Auth API
-
-1. Click Add Rule...
-2. Select Blank rule.
-3. Fill out the rule as shown in the section on setting up proxy for Containers, specifically with the following parameters:
-
-Match URL
-
-    Requested URL: Matches the Pattern
-    Using: Wilcards
-    Pattern: auth/*
-    Ignore case: checked
-
-Action
-
-    Action type: Rewrite
-    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>/auth/{R:1}
-    Append query string: checked
-
-##### Set up proxy for Environment API
-
-1. Click Add Rule...
-2. Select Blank rule.
-3. Fill out the rule as shown in the section on setting up proxy for Containers, specifically with the following parameters:
-
-Match URL
-
-    Requested URL: Matches the Pattern
-    Using: Wilcards
-    Pattern: environment/*
-    Ignore case: checked
-
-Action
-
-    Action type: Rewrite
-    Rewrite URL: http://<coupling-service-host>:<coupling-service-port>/environment/{R:1}
-    Append query string: checked
+![Figure @iis5: Maconomy API](images/maconomy-api-configuration.png "Maconomy API")
 
 ##### Preserve the Host Header
 
@@ -300,13 +230,13 @@ See [*AppCmd* reference](http://www.iis.net/learn/get-started/getting-started-wi
 
 Open the Server Variables screen by clicking *View Server Variables...* in the *URL Rewrite* screen.
 
-In the Server Variables screen, click *Add...* and add the variable `HTTP_X_FORWARDED_PROTO` as shown in Figure @iis7.
+In the Server Variables screen, click *Add...* and add the variable `HTTP_X_FORWARDED_PROTO` as shown in Figure @iis6.
 
-![Figure @iis7: Add Server Variables](images/iis7-1024x238.png "Add Server Variables")
+![Figure @iis6: Add Server Variables](images/iis7-1024x238.png "Add Server Variables")
 
-In the URL rewrite rules (both containers, configurations, filedrop, auth, and environment) that proxies the web service, set the server variable `HTTP_X_FORWARDED_PROTO` to `https` as shown in Figure @iis8.
+In the URL rewrite rules (both containers, configurations, filedrop, auth, and environment) that proxies the web service, set the server variable `HTTP_X_FORWARDED_PROTO` to `https` as shown in Figure @iis7.
 
-![Figure @iis8: Setting up HTTPS](images/iis8-1024x637.png "Setting up HTTPS")
+![Figure @iis7: Setting up HTTPS](images/iis8-1024x637.png "Setting up HTTPS")
 
 Restart the webserver.
 
@@ -373,61 +303,19 @@ Here is a template for setting up a virtual host that serves iAccess _with_ SSL.
 
         ProxyRequests      Off
         ProxyPreserveHost  On
+        
+        RequestHeader set Maconomy-Forwarded-Base-Path maconomy-api
         # Signal to the coupling service that the originating protocol is HTTPS
-        RequestHeader set X-Forwarded-Proto "https"
-
+        RequestHeader set X-Forwarded-Proto "https"        
+        
         # Proxy the web services from the coupling service
-        ProxyPass  /containers                  http://<coupling-service-host>:<coupling-service-web-port>/containers                 retry=0
-        ProxyPass  /filedrop                    http://<coupling-service-host>:<coupling-service-web-port>/filedrop                   retry=0
-        ProxyPass  /configurations              http://<coupling-service-host>:<coupling-service-web-port>/configurations             retry=0
-        ProxyPass  /auth                        http://<coupling-service-host>:<coupling-service-web-port>/auth                       retry=0
-        ProxyPass  /environment                 http://<coupling-service-host>:<coupling-service-web-port>/environment                retry=0
+        ProxyPass  /maconomy-api  http://<coupling-service-host>:<coupling-service-web-port>  retry=0
 
         # Set up this virtual host to use SSL
         SSLEngine              On
         SSLProxyEngine         On
         SSLCertificateFile     <crt-file-location>
         SSLCertificateKeyFile  <key-file-location>
-    </VirtualHost>
-
-Here is an example using the preceding template:
-
-    Listen 443
-    <VirtualHost *:443>
-        ServerName techwebproject
-
-        # Server iAccess files from installation directory
-        DocumentRoot "C:/Maconomy/Webservers/w_20_0.101/htdocs/Maconomy/iAccess/w_20_0.101.w20/app"
-
-        <Directory C:/Maconomy/Webservers/w_20_0.101/htdocs/Maconomy/iAccess/w_20_0.101.w20/app>
-           Order deny,allow
-           Allow from all
-           AllowOverride All
-           Require all granted
-        </Directory>
-
-        <Proxy *>
-           Order deny,allow
-           Allow from all
-        </Proxy>
-
-        ProxyRequests      Off
-        ProxyPreserveHost  On
-        # Signal to the coupling service that the originating protocol is HTTPS
-        RequestHeader set X-Forwarded-Proto "https"
-
-        # Proxy the web services from the coupling service
-        ProxyPass  /containers               http://localhost:8085/containers              retry=0
-        ProxyPass  /filedrop                 http://localhost:8085/filedrop                retry=0
-        ProxyPass  /configurations           http://localhost:8085/configurations          retry=0
-        ProxyPass  /auth                     http://localhost:8085/auth                    retry=0
-        ProxyPass  /environment              http://localhost:8085/environment             retry=0
-
-        # Set up this virtual host to use SSL
-        SSLEngine              On
-        SSLProxyEngine         On
-        SSLCertificateFile     c:/sslkeys/server.crt
-        SSLCertificateKeyFile  c:/sslkeys/server.key
     </VirtualHost>
 
 ### Edit Routing Rules
